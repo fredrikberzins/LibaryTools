@@ -75,13 +75,13 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
         -of csv=p=0 "$file").Trim()
 
     if ([int]$height -le [int]$TargetHeight) {
-        Write-Host "Skipping (≤${TargetHeight}p): $file"
+        Write-Host "Skipping (<=${TargetHeight}p): $file"
         return
     }
 
-    Write-Host "Processing: $file → $output"
+    Write-Host "Processing: $file --> $output"
 
-    & ffmpeg -hide_banner -stats -n -i "$file" -map 0 `
+    & ffmpeg -v error -stats -n -i "$file" -map 0 `
         -c:v h264_nvenc -preset p7 -pix_fmt yuv420p -vf "scale=-2:$TargetHeight" `
         -c:a aac -b:a 640k -ac $Channels -c:s copy -map_metadata 0 -sn "$output"
 }
