@@ -1,14 +1,14 @@
 # LibaryCleaner
 ## Exampel for runing on a smb from windows(NAS)
-.\transcode_movies.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1
+```.\transcode_movies.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1```
 
-.\remove_pretranscoded.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1 
+```.\remove_pretranscoded.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1 -WhatIf```
 
 ## Exampel for runing on Linux(Debian)
 
-~~$0 -i /home/user/Movies -r 1080p -a 2.0~~ (Work in progress)
+~~```$0 -i /home/user/Movies -r 1080p -a 2.0```~~ (Work in progress)
 
-./remove_pretranscoded.sh ./movies 1440p 5.1
+```./remove_pretranscoded.sh ./movies 1440p 5.1 true```
 
 ## Tags
 ### Pretranscode tags
