@@ -57,8 +57,8 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
     }
 
     # Replace only the resolution/audio tag, leave other brackets intact
-    if ($name -match "\[[0-9]{3,4}p\s[0-9]\.[0-9]\](?!\[)") {
-        $outName = $name -replace "\[[0-9]{3,4}p\s[0-9]\.[0-9]\](?!\[)", "[${TargetHeight}p 8bit $a]"
+    if ($name -match "\[([0-9]{3,4}p\s?)?([0-9]{1,2}bit\s?)?([0-9]\.[0-9])?\]") {
+        $outName = $name -replace "\[([0-9]{3,4}p\s?)?([0-9]{1,2}bit\s?)?([0-9]\.[0-9])?\]", "[${TargetHeight}p 8bit $a]"
     } else {
         $outName = "$name - [${TargetHeight}p 8bit $a]"
     }
