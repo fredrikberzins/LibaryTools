@@ -1,5 +1,22 @@
 #!/usr/bin/env bash
 
+show_help() {
+    echo "Movie Transcoder Script"
+    echo
+    echo "Usage: $0 -i <input_dir> -r <resolution> -a <audio>"
+    echo
+    echo "Options:"
+    echo "  -i   Path to movie library"
+    echo "  -r   Target resolution (e.g. 720p, 1080p, 1440p)"
+    echo "  -a   Target audio layout (2.0, 5.1, 7.1)"
+    echo "  -h   Show this help message"
+    echo
+    echo "Examples:"
+    echo "  $0 -i /mnt/movies -r 1440p -a 5.1"
+    echo "  $0 -i /home/user/Movies -r 1080p -a 2.0"
+    exit 0
+}
+
 set -euo pipefail
 
 # --- Parameters ---

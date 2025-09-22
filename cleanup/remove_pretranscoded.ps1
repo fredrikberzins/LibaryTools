@@ -1,19 +1,36 @@
 param (
-    [Parameter(Mandatory=$true)]
-    [string]$i,                # Input folder
-
-    [Parameter(Mandatory=$true)]
-    [string]$r,                # Resolution to keep (ex: 1440p)
-
-    [Parameter(Mandatory=$true)]
-    [string]$a,                # Audio channels to keep (ex: 5.1)
-
-    [switch]$WhatIf            # Test mode
+    [string]$i,  # Input directory
+    [string]$r,  # Resolution (e.g. 720p, 1080p, 1440p)
+    [string]$a,  # Audio (2.0, 5.1, 7.1)
+    [switch]$d,  # Dry run mode
+    [switch]$h   # Help
 )
 
-Write-Host "Cleaning: $i"
-Write-Host "Target: [$r $a]"
-Write-Host ""
+function Show-Help {
+    Write-Host -ForegroundColor Green "Movie Removal Script"
+    Write-Host -ForegroundColor Green
+    Write-Host -ForegroundColor Green "Usage: .\remove_pretranscoded.ps1 -i <input_dir> -r <resolution> -a <audio>"
+    Write-Host -ForegroundColor Green
+    Write-Host -ForegroundColor Green "Options:"
+    Write-Host -ForegroundColor Green "  -i   Path to movie library"
+    Write-Host -ForegroundColor Green "  -r   Target resolution (e.g. 720p, 1080p, 1440p)"
+    Write-Host -ForegroundColor Green "  -a   Target audio layout (2.0, 5.1, 7.1)"
+    Write-Host -ForegroundColor Green "  -d   Dry run to se waht will be deleted"
+    Write-Host -ForegroundColor Green "  -h   Show this help message"
+    Write-Host -ForegroundColor Green
+    Write-Host -ForegroundColor Green "Examples:"
+    Write-Host -ForegroundColor Green "  .\remove_pretranscoded.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1"
+    Write-Host -ForegroundColor Green "  .\remove_pretranscoded.ps1 -i D:\Movies -r 1080p -a 2.0 -d"
+    exit
+}
+
+if ($h -or -not $i -or -not $r -or -not $a) {
+    Show-Help
+}
+
+Write-Host "Cleaning: $i" -ForegroundColor Yellow
+Write-Host "Target: [$r $a]" -ForegroundColor Green
+Write-Host 
 
 # Only first-level subdirectories
 $movieDirs = Get-ChildItem -LiteralPath $i -Directory | ForEach-Object { $_.FullName }
@@ -64,8 +81,9 @@ foreach ($dir in $movieDirs) {
         }
         elseif ($f.Block) {
             Write-Host " DELETE $($f.Name)   (other version: $($f.Block))" -ForegroundColor Red
-            if (-not $WhatIf) {
-                Remove-Item -LiteralPath $f.File.FullName -Force
+            if (-not $d) {
+                #Remove-Item -LiteralPath $f.File.FullName -Force
+                continue
             }
         }
         else {

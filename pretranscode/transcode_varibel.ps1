@@ -6,19 +6,19 @@ param(
 )
 
 function Show-Help {
-    Write-Host "Movie Transcoder Script"
-    Write-Host
-    Write-Host "Usage: .\transcode_movies.ps1 -i <input_dir> -r <resolution> -a <audio>"
-    Write-Host
-    Write-Host "Options:"
-    Write-Host "  -i   Path to movie library"
-    Write-Host "  -r   Target resolution (e.g. 720p, 1080p, 1440p)"
-    Write-Host "  -a   Target audio layout (2.0, 5.1, 7.1)"
-    Write-Host "  -h   Show this help message"
-    Write-Host
-    Write-Host "Examples:"
-    Write-Host "  .\transcode_movies.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1"
-    Write-Host "  .\transcode_movies.ps1 -i D:\Movies -r 1080p -a 2.0"
+    Write-Host -ForegroundColor Green "Movie Transcoder Script"
+    Write-Host -ForegroundColor Green
+    Write-Host -ForegroundColor Green "Usage: .\transcode_varibel.ps1 -i <input_dir> -r <resolution> -a <audio>"
+    Write-Host -ForegroundColor Green
+    Write-Host -ForegroundColor Green "Options:"
+    Write-Host -ForegroundColor Green "  -i   Path to movie library"
+    Write-Host -ForegroundColor Green "  -r   Target resolution (e.g. 720p, 1080p, 1440p)"
+    Write-Host -ForegroundColor Green "  -a   Target audio layout (2.0, 5.1, 7.1)"
+    Write-Host -ForegroundColor Green "  -h   Show this help message"
+    Write-Host -ForegroundColor Green
+    Write-Host -ForegroundColor Green "Examples:"
+    Write-Host -ForegroundColor Green "  .\transcode_varibel.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1"
+    Write-Host -ForegroundColor Green "  .\transcode_varibel.ps1 -i D:\Movies -r 1080p -a 2.0"
     exit
 }
 
@@ -35,14 +35,14 @@ switch ($a) {
     "5.1" { $Channels = 6 }
     "7.1" { $Channels = 8 }
     default {
-        Write-Host "Unsupported audio layout: $a"
+        Write-Host -ForegroundColor Red "Unsupported audio layout: $a"
         exit 1
     }
 }
 
-Write-Host "Input: $i"
-Write-Host "Target resolution: ${TargetHeight}p"
-Write-Host "Target audio: $a ($Channels channels)"
+Write-Host "Input: $i" -ForegroundColor Yellow
+Write-Host "Target resolution: ${TargetHeight}p" -ForegroundColor Green
+Write-Host "Target audio: $a ($Channels channels)" -ForegroundColor Green
 Write-Host
 
 Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
@@ -52,7 +52,7 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
 
     # Skip if already transcoded
     if ($name -match "\[${TargetHeight}p 8bit $a\]") {
-        Write-Host "Already transcoded: $file"
+        Write-Host "Already transcoded: $file" -ForegroundColor Yellow
         return
     }
 
@@ -66,7 +66,7 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
     $output = Join-Path $dir "$outName.mkv"
 
     if (Test-Path $output) {
-        Write-Host "Already exists, skipping: $output"
+        Write-Host "Skipping, Already exists: $output"  -ForegroundColor Yellow
         return
     }
 
@@ -75,11 +75,11 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
         -of csv=p=0 "$file").Trim()
 
     if ([int]$height -le [int]$TargetHeight) {
-        Write-Host "Skipping (<=${TargetHeight}p): $file"
+        Write-Host "Skipping (<=${TargetHeight}p): $file"  -ForegroundColor Yellow
         return
     }
 
-    Write-Host "Processing: $file --> $output"
+    Write-Host "Processing: $file --> $output" -ForegroundColor Green
 
     & ffmpeg -v error -stats -n -i "$file" -map 0 `
         -c:v h264_nvenc -preset p7 -pix_fmt yuv420p -vf "scale=-2:$TargetHeight" `

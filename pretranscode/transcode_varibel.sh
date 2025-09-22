@@ -1,6 +1,6 @@
 #!/bin/bash
-# transcode_movies.sh
-# Usage: ./transcode_movies.sh -i /path/to/library -r 1440p -a 5.1
+# transcode_varibel.sh
+# Usage: ./transcode_varibel.sh -i /path/to/library -r 1440p -a 5.1
 
 show_help() {
     echo "Movie Transcoder Script"
