@@ -141,7 +141,7 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
     # Transcode with HEVC
     & ffmpeg -v warning -stats -y -i "$file" `
         -map 0 `
-        -c:v hevc_nvenc -preset slow -rc:v vbr -cq:v 23 -b:v $targetBitrate -maxrate $targetBitrate -bufsize $bufsize `
+        -c:v hevc_nvenc -preset slow -rc:v vbr -b:v $targetBitrate -maxrate $targetBitrate -bufsize $bufsize `
         -pix_fmt yuv420p -vf "scale=-2:$TargetHeight" `
         -c:a $audioCodec -ac $outChannels -b:a 640k `
         -c:s copy -map_metadata 0 -sn "$tempOutput"
