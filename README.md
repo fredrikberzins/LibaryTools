@@ -2,13 +2,15 @@
 ## Exampel for runing on a smb from windows(NAS)
 ```.\transcode_varibel.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1```
 
-```.\remove_pretranscoded.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1 -WhatIf```
+```.\transcode_auto.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1```
 
-```.\transcode_auto.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1"```
+```.\remove_pretranscoded.ps1 -i \\192.168.1.220\film_nas\movies -r 1440p -a 5.1 -WhatIf```
 
 ## Exampel for runing on Linux(Debian)
 
 ```./transcode_varibel.sh -i /path/to/library -r 720p -a 2.0```(Work in progress)
+
+~~```./transcode_auto.sh -i ./movies -r 1440p -a 5.1```~~(Need fixing)
 
 ```./remove_pretranscoded.sh ./movies 1440p 7.1 true```
 
