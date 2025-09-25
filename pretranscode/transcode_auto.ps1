@@ -153,13 +153,14 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 -File | Where-Object { $_.
         -c:s copy -map_metadata 0 -sn "$tempOutput"
     
     Write-Host "Transcoding Done" -ForegroundColor Green
-    Write-Host "Checking for: '$tempOutput'"
-    # Move temp file to final location
-    if (Test-Path $tempOutput) {
-        Move-Item -Path $tempOutput -Destination $finalOutput
+
+    Start-Sleep -Seconds 2
+    # Check and move
+    if (Test-Path -LiteralPath $tempOutput) {
+        Move-Item -LiteralPath $tempOutput -Destination $finalOutput -Force
         Write-Host "Moved and Finished: $finalOutput" -ForegroundColor Green
     } else {
+        Get-Item -LiteralPath $tempOutput | Format-List FullName, Length
         Write-Host "Move failed: $file" -ForegroundColor Red
-        Get-ChildItem -Path (Split-Path $tempOutput) | Select-Object Name, Length
     }
 }
