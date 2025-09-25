@@ -39,7 +39,7 @@ Write-Host "Target resolution: ${TargetHeight}p" -ForegroundColor Green
 Write-Host "Target audio: $a ($TargetChannels channels)" -ForegroundColor Green
 Write-Host
 
-Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
+Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 -File | Where-Object { $_.DirectoryName -notmatch '\\\.temp($|\\)' } | ForEach-Object {
     $file = $_.FullName
     $dir = $_.DirectoryName
     $name = $_.BaseName
@@ -108,12 +108,24 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
     # Determine output bitrate (max 15 Mbps)
     $targetBitrate = [Math]::Min($bitrate, 15MB) # 15 Mbps cap
 
-    # Build output filename (only replace technical block)
-    if ($name -match "\[([0-9]{3,4}p\s?)?([0-9]{1,2}bit\s?)?([0-9]\.[0-9])?\]") {
-        $outName = $name -replace "\[([0-9]{3,4}p\s?)?([0-9]{1,2}bit\s?)?([0-9]\.[0-9])?\]", "[${TargetHeight}p 8bit $outChannels]"
-    } else {
-        $outName = "$name - [${TargetHeight}p 8bit $outChannels]"
+    # Map audio layout
+    switch ($a) {
+        "2.0" { $Channels = 2; $audioTag = "2.0" }
+        "5.1" { $Channels = 6; $audioTag = "5.1" }
+        "7.1" { $Channels = 8; $audioTag = "7.1" }
+        default {
+            Write-Host -ForegroundColor Red "Unsupported audio layout: $a"
+            exit 1
+        }
     }
+
+    # Then use $audioTag in the filename
+    if ($name -match "\[([0-9]{3,4}p\s?)?([0-9]{1,2}bit\s?)?([0-9]\.[0-9])?\]") {
+        $outName = $name -replace "\[([0-9]{3,4}p\s?)?([0-9]{1,2}bit\s?)?([0-9]\.[0-9])?\]", "[${TargetHeight}p 8bit $audioTag]"
+    } else {
+        $outName = "$name - [${TargetHeight}p 8bit $audioTag]"
+    }
+
 
     $tempOutput = Join-Path $TempDir "$outName.mkv"
     $finalOutput = Join-Path $dir "$outName.mkv"
@@ -130,12 +142,6 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
 
     Write-Host "Processing: $file --> $tempOutput" -ForegroundColor Green
 
-    # Build dynamic audio codec
-    if ($audioChannels -ge $outChannels) {
-        $audioCodec = "copy" # keep original codec if we don't upmix
-    } else {
-        $audioCodec = "aac"
-    }
     $bufsize = 2 * $targetBitrate
 
     # Transcode with HEVC
@@ -143,16 +149,17 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
         -map 0 `
         -c:v hevc_nvenc -preset slow -rc:v vbr -b:v $targetBitrate -maxrate $targetBitrate -bufsize $bufsize `
         -pix_fmt yuv420p -vf "scale=-2:$TargetHeight" `
-        -c:a $audioCodec -ac $outChannels -b:a 640k `
+        -c:a aac -ac $outChannels -b:a 640k `
         -c:s copy -map_metadata 0 -sn "$tempOutput"
-
+    
+    Write-Host "Transcoding Done" -ForegroundColor Green
+    Write-Host "Checking for: '$tempOutput'"
     # Move temp file to final location
-    if (Test-Path $tempOutput -and -not (Test-Path $finalOutput)) {
+    if (Test-Path $tempOutput) {
         Move-Item -Path $tempOutput -Destination $finalOutput
-        Write-Host "Finished: $finalOutput" -ForegroundColor Green
-    } elseif (Test-Path $finalOutput) {
-        Write-Host "Final file already exists, skipping move: $finalOutput" -ForegroundColor Yellow
+        Write-Host "Moved and Finished: $finalOutput" -ForegroundColor Green
     } else {
-        Write-Host "Transcoding failed: $file" -ForegroundColor Red
+        Write-Host "Move failed: $file" -ForegroundColor Red
+        Get-ChildItem -Path (Split-Path $tempOutput) | Select-Object Name, Length
     }
 }

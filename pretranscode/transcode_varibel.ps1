@@ -81,7 +81,9 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 | ForEach-Object {
 
     Write-Host "Processing: $file --> $output" -ForegroundColor Green
 
-    & ffmpeg -v error -stats -n -i "$file" -map 0 `
-        -c:v h264_nvenc -preset p7 -pix_fmt yuv420p -vf "scale=-2:$TargetHeight" `
-        -c:a aac -b:a 640k -ac $Channels -c:s copy -map_metadata 0 -sn "$output"
+    & ffmpeg -v warning -stats -y -i "$file" `
+        -map 0 -c:v hevc_nvenc -preset slow `
+        -pix_fmt yuv420p -vf "scale=-2:$TargetHeight" `
+        -c:a aac -b:a 640k -ac $Channels `
+        -c:s copy -map_metadata 0 -sn "$output"
 }
