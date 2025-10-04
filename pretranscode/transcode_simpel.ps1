@@ -52,8 +52,6 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 -File | Where-Object { $_.
 
     # Initialize variables
     $height = 0
-    $bitrate = 0
-    $bitrateKbps = 0
     $filesizeBytes = 0
     $durationSec = 0.0
 
@@ -66,48 +64,11 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 -File | Where-Object { $_.
         return
     }
 
-    # Attempt to probe bitrate
-    $probeBitrate = & ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate `
-        -of default=noprint_wrappers=1:nokey=1 "$file"
-
-    # Fallback if probe fails
-    if (-not [int]::TryParse($probeBitrate.Trim(), [ref]$bitrate) -or $bitrate -eq 0) {
-        Write-Host "Bitrate probe failed, will fallback" -ForegroundColor Yellow
-        # Ensure we have the raw path string
-        $rawFile = [System.IO.Path]::GetFullPath($file)
-
-        # Get file info safely
-        try {
-            $fileInfo = Get-Item -LiteralPath $rawFile
-            $filesizeBytes = $fileInfo.Length
-        } catch {
-            Write-Host "Failed to get file size for $file" -ForegroundColor Red
-            $filesizeBytes = 0
-        }
-
-        # Duration from ffprobe
-        $durationStr = & ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file"
-        [double]::TryParse($durationStr.Trim(), [ref]$durationSec) | Out-Null
-
-        # Fallback bitrate
-        if ($bitrate -eq 0 -and $filesizeBytes -gt 0 -and $durationSec -gt 0) {
-            $bitrate = [int](($filesizeBytes * 8) / $durationSec)  # bits/sec
-        }
-    } else {
-        $filesizeBytes = (Get-Item $file).Length
-        $durationStr = & ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file"
-        [double]::TryParse($durationStr.Trim(), [ref]$durationSec) | Out-Null
-    }
-
     $probeAudio = & ffprobe -v error -select_streams a:0 -show_entries stream=channels -of csv=p=0 "$file"
     $audioChannels = [int]$probeAudio.Trim()
 
     # Determine output channels (cannot exceed source)
     $outChannels = [Math]::Min($audioChannels, $TargetChannels)
-
-    $bitrate = [int]($bitrate * 0.3)
-    # Determine output bitrate (max 10 Mbps)
-    $targetBitrate = [Math]::Min($bitrate, 10MB) # 10 Mbps cap
 
     # Map audio layout
     switch ($a) {
@@ -142,15 +103,11 @@ Get-ChildItem -Path $i -Recurse -Include *.mkv, *.mp4 -File | Where-Object { $_.
     }
 
     Write-Host "Processing: $file --> $tempOutput" -ForegroundColor Green
-    Write-Host "Settings, Bitrate: $([int]($targetBitrate/1000)), Resolution: $TargetHeight, Channels: $outChannels" -ForegroundColor Green
-
-
-    $bufsize = 2 * $targetBitrate
 
     # Transcode with HEVC
     & ffmpeg -v warning -stats -y -i "$file" `
         -map 0 `
-        -c:v hevc_nvenc -preset slow -rc:v vbr -cq:v 21 -b:v $targetBitrate -maxrate $(($targetBitrate * 2)) -bufsize $(($targetBitrate * 4)) `
+        -c:v hevc_nvenc -preset slow -rc:v vbr -cq:v 24 `
         -pix_fmt yuv420p -vf "scale=-2:$TargetHeight" `
         -c:a aac -ac $outChannels -b:a 640k `
         -c:s copy -map_metadata 0 -sn "$tempOutput"
